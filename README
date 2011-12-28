@@ -1,0 +1,10 @@
+This is a utility for generating images with short focal depth using multiple images.
+The idea is to use a video taken looking out the side of a moving vehicle.
+Convert the video into frames using something like: mplayer -vo png videofilename
+Then run ./motionfocal.py --input data/ --begin 1 --end 30 --output output.png --offset 10
+Where data is the directory where you put the frames.
+This will use the 29 first frames to generate output.png.
+Use a positive offset if the objects in the video are going right and a negative offset if the objects are going left.
+An offset of 0 will result in a focal point at infinity. Larger offsets will bring the focal point closer to the camera.
+
+
