@@ -2,7 +2,6 @@
 
 from numpy import *
 from PIL import Image
-import argparse
 import os
 import os.path
 import re
@@ -62,6 +61,7 @@ def file_list(basepath, begin = None, end = None):
 pool = mp.Pool()
 
 if '__main__' == __name__:
+    import argparse
     parser = argparse.ArgumentParser(description = 'utility for generating images with short focal depth using multiple images')
     parser.add_argument('--input', help = 'the base path of the frames would be asdf if you have frames named like asdf001.png', required = True)
     parser.add_argument('--offset', default = 1, help = 'how much to offset each image. should be negative if things are going right to left')
