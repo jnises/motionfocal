@@ -8,23 +8,39 @@ import os.path
 import re
 from scipy.ndimage import interpolation
 import logging
+import multiprocessing as mp
 
 logging.basicConfig(level = logging.INFO)
 
+def _shift_image(image, offset):
+    return interpolation.shift(image, (0, offset, 0), mode = 'nearest')
+
 def compose(images, offset):
     '''
+    images: asyncresults of images
     TODO might want to linearize the input images before composition
     '''
-    firstimage = asarray(Image.open(images[0]))
+    firstimage = images[0].get()
     out = zeros(firstimage.shape)
-    firstimage = None
-    for inum, image in enumerate(images):
-        logging.info('loading image %s', image)
-        img = asarray(Image.open(image))
-        imgoffset = (len(images) * 0.5 - inum) * offset
-        out += interpolation.shift(img, (0, imgoffset, 0), mode = 'nearest')
+    shifted = [pool.apply_async(_shift_image, [image.get(), (len(images) * 0.5 - inum) * offset]) for inum, image in enumerate(images)]
+    for inum, image in enumerate(shifted):
+        logging.info('processing image %d', inum)
+        out += image.get()
     out /= len(images)
     return Image.fromarray(out.astype(uint8))
+
+
+def _load_image(image):
+    logging.info('loading image %s', image)
+    return asarray(Image.open(image))
+
+
+def load_images(images):
+    '''
+    load images using processpool
+    retuns a list of asyncresults
+    '''
+    return [pool.apply_async(_load_image, [image]) for image in images]
 
 
 def file_list(basepath, begin = None, end = None):
@@ -43,6 +59,8 @@ def file_list(basepath, begin = None, end = None):
     return sort([os.path.join(directory, x.group(0)) for x in inrange])
 
 
+pool = mp.Pool()
+
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description = 'utility for generating images with short focal depth using multiple images')
     parser.add_argument('--input', help = 'the base path of the frames would be asdf if you have frames named like asdf001.png', required = True)
@@ -53,4 +71,4 @@ if '__main__' == __name__:
     args = parser.parse_args()
     files = file_list(args.input, int(args.begin) if args.begin else None, int(args.end) if args.end else None)
     logging.info('will compose using the files %s', files)
-    compose(files, float(args.offset)).save(args.output)
+    compose(load_images(files), float(args.offset)).save(args.output)
