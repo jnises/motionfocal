@@ -44,7 +44,7 @@ def file_list(basepath, begin = None, end = None):
 
 
 if '__main__' == __name__:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = 'utility for generating images with short focal depth using multiple images')
     parser.add_argument('--input', help = 'the base path of the frames would be asdf if you have frames named like asdf001.png', required = True)
     parser.add_argument('--offset', default = 1, help = 'how much to offset each image. should be negative if things are going right to left')
     parser.add_argument('--output', required = True, help = 'the output filename')
