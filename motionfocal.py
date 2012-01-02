@@ -21,7 +21,7 @@ def compose(pool, images, offset, scale = 1.0):
     '''
     firstimage = images[0].get()
     out = zeros(firstimage.shape)
-    shifted = [pool.apply_async(_shift_image, [image.get(), (len(images) * 0.5 - inum) * offset]) for inum, image in enumerate(images)]
+    shifted = [pool.apply_async(_shift_image, [image.get(), ((len(images) - 1) * 0.5 - inum) * offset]) for inum, image in enumerate(images)]
     for inum, image in enumerate(shifted):
         logging.info('processing image %d', inum)
         out += image.get()
