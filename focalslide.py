@@ -3,6 +3,7 @@
 import motionfocal as mf
 from numpy import *
 import logging
+import multiprocessing as mp
 
 if '__main__' == __name__:
     import argparse
@@ -15,13 +16,18 @@ if '__main__' == __name__:
     parser.add_argument('--output-type', dest = 'output_type', default = 'png')
     parser.add_argument('--begin', help = 'the number of the first frame')
     parser.add_argument('--end', help = 'the number of the frame after the last')
+    parser.add_argument('--brightness', default = 1, help = 'scale the output using this value before qunatizing to 8 bit')
     args = parser.parse_args()
+    logging.info('operating using %d processes', mp.cpu_count())
+    pool = mp.Pool()
     files = mf.file_list(args.input, int(args.begin) if args.begin else None, int(args.end) if args.end else None) 
     logging.info('will compose using the files %s', files)
-    images = mf.load_images(files)
+    images = mf.load_images(pool, files)
     framedigits = int(ceil(log10(int(args.output_frames))))
     outtemplate = '%s%0' + str(framedigits) + 'd.%s'
     for i, offset in enumerate(linspace(float(args.begin_offset), float(args.end_offset), int(args.output_frames))):
-        logging.info('generating output for offset %f', offset)
-        mf.compose(images, offset).save(outtemplate % (args.output, i, args.output_type))
+        output = outtemplate % (args.output, i, args.output_type)
+        logging.info('generating output image %s for offset %f', output, offset)
+        
+        mf.compose(pool, images, offset, float(args.brightness)).save(output)
         

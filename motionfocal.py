@@ -14,7 +14,7 @@ logging.basicConfig(level = logging.INFO)
 def _shift_image(image, offset):
     return interpolation.shift(image, (0, offset, 0), mode = 'nearest')
 
-def compose(images, offset, scale = 1.0):
+def compose(pool, images, offset, scale = 1.0):
     '''
     images: asyncresults of images
     TODO might want to linearize the input images before composition
@@ -33,11 +33,12 @@ def compose(images, offset, scale = 1.0):
 
 
 def _load_image(image):
-    logging.info('loading image %s', image)
-    return asarray(Image.open(image))
+    arr = asarray(Image.open(image))
+    logging.info('loaded image %s', image)
+    return arr
 
 
-def load_images(images):
+def load_images(pool, images):
     '''
     load images using processpool
     retuns a list of asyncresults
@@ -61,9 +62,9 @@ def file_list(basepath, begin = None, end = None):
     return sort([os.path.join(directory, x.group(0)) for x in inrange])
 
 
-pool = mp.Pool()
 
 if '__main__' == __name__:
+    pool = mp.Pool()
     import argparse
     parser = argparse.ArgumentParser(description = 'utility for generating images with short focal depth using multiple images')
     parser.add_argument('--input', help = 'the base path of the frames would be asdf if you have frames named like asdf001.png', required = True)
@@ -75,4 +76,4 @@ if '__main__' == __name__:
     args = parser.parse_args()
     files = file_list(args.input, int(args.begin) if args.begin else None, int(args.end) if args.end else None)
     logging.info('will compose using the files %s', files)
-    compose(load_images(files), float(args.offset), float(args.brightness)).save(args.output)
+    compose(pool, load_images(pool, files), float(args.offset), float(args.brightness)).save(args.output)
