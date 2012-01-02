@@ -14,7 +14,7 @@ logging.basicConfig(level = logging.INFO)
 def _shift_image(image, offset):
     return interpolation.shift(image, (0, offset, 0), mode = 'nearest')
 
-def compose(images, offset):
+def compose(images, offset, scale = 1.0):
     '''
     images: asyncresults of images
     TODO might want to linearize the input images before composition
@@ -26,6 +26,9 @@ def compose(images, offset):
         logging.info('processing image %d', inum)
         out += image.get()
     out /= len(images)
+    out *= scale
+    out[out > 255] = 255
+    out[out < 0] = 0
     return Image.fromarray(out.astype(uint8))
 
 
@@ -68,7 +71,8 @@ if '__main__' == __name__:
     parser.add_argument('--output', required = True, help = 'the output filename')
     parser.add_argument('--begin', help = 'the number of the first frame')
     parser.add_argument('--end', help = 'the number of the frame after the last')
+    parser.add_argument('--brightness', default = 1, help = 'scale the output using this value before qunatizing to 8 bit')
     args = parser.parse_args()
     files = file_list(args.input, int(args.begin) if args.begin else None, int(args.end) if args.end else None)
     logging.info('will compose using the files %s', files)
-    compose(load_images(files), float(args.offset)).save(args.output)
+    compose(load_images(files), float(args.offset), float(args.brightness)).save(args.output)
