@@ -12,7 +12,7 @@ import multiprocessing as mp
 logging.basicConfig(level = logging.INFO)
 
 def _shift_image(image, offset):
-    return interpolation.shift(image, (0, offset, 0), mode = 'nearest')
+    return interpolation.shift(image, (0, offset, 0), mode = 'nearest', order = 1)
 
 def compose(pool, images, offset, scale = 1.0):
     '''
